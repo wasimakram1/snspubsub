@@ -1,0 +1,10 @@
+.*.swp
+.env
+node_modules/
+**.log
+.idea
+*.iml
+coverage/
+test-reports.xml
+.DS_Store
+apidoc
