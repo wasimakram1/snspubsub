@@ -39,8 +39,8 @@ class SnsSampleSubscribers{
                     console.log("Hello World");
                     // Set region
                     AWS.config.update({
-                      accessKeyId: AWS_KEY,
-                      secretAccessKey: AWS_SECRET,
+                      // accessKeyId: AWS_KEY,
+                      // secretAccessKey: AWS_SECRET,
                       region: SNS_REGION
                     });
                     
@@ -61,28 +61,31 @@ class SnsSampleSubscribers{
                     // then have to stringify the entire message payload
                     payload = JSON.stringify(payload);
 
-                    sns.createPlatformEndpoint({
-                        PlatformApplicationArn: APPLICATION_ARN,
-                        Token: DEVICE_TOKEN
+                    
+                    // For a target ARN you have to create the endpoint for it, below is the code 
+                    // sns.createPlatformEndpoint({
+                    //     PlatformApplicationArn: APPLICATION_ARN,
+                    //     Token: DEVICE_TOKEN
+                    // }, function(err, data) {
+                    //     if (err) {
+                    //         console.log(err.stack);
+                    //         return;
+                    //     }
+                    //     var endpointArn = data.EndpointArn;
+                    
+                    sns.publish({
+                        Message: payload,      // Required
+                        MessageStructure: 'json',
+                        TargetArn: endpointArn, // can add topic ARN or target ARN here
                     }, function(err, data) {
                         if (err) {
-                            console.log(err.stack);
+                            console.log(err);
                             return;
                         }
-                        var endpointArn = data.EndpointArn;
-                        sns.publish({
-                            Message: payload,      // Required
-                            MessageStructure: 'json',
-                            TargetArn: endpointArn, // can add topic ARN or target ARN here
-                        }, function(err, data) {
-                            if (err) {
-                                console.log(err);
-                                return;
-                            }
-                            console.log('push sent');
-                            console.log(data);
-                        });
+                        console.log('push sent');
+                        console.log(data);
                     });
+                    
                 }
             }
         );
