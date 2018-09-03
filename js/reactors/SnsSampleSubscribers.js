@@ -72,7 +72,8 @@ class SnsSampleSubscribers{
                     //         return;
                     //     }
                     //     var endpointArn = data.EndpointArn;
-                    
+                   
+                    //json is for json message, string message dont need any structure type 
                     sns.publish({
                         Message: payload,      // Required
                         MessageStructure: 'json',
