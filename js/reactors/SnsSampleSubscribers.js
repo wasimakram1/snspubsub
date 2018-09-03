@@ -1,11 +1,13 @@
 "use strict";
-let Rx = require("rx");
+const Rx = require("rx");
 const AWS = require('aws-sdk');
+const AWS_KEY = process.env.AWS_KEY;
+const AWS_SECRET = process.env.AWS_SECRET;
+const SNS_REGION = process.env.SNS_REGION;
+const APPLICATION_ARN = process.env.APPLICATION_ARN;
+const DEVICE_TOKEN = process.env.DEVICE_TOKEN;
 const SNSClient = require('simple-sns-client');
- 
 const sns = new AWS.SNS();
-const snsClient = new SNSClient(sns);
-const SNS_TOPIC = process.env.SNS_TOPIC || 'my-topic';
 
 class SnsSampleSubscribers{
     static setupRectorPipeline(SnsSampleEventEmitter) {
@@ -33,16 +35,60 @@ class SnsSampleSubscribers{
                 pushMsgToSQS();
 
                 function pushMsgToSQS(){
-                    console.log("Pushing to SQS");
-                    snsClient
-                        .getTopicArn(SNS_TOPIC)
-                        .then(topicArn => snsClient.publish(topicArn, 'Hello world!')); 
-                    }
-                
-            });
-        }
 
-    
+                    console.log("Hello World");
+                    // Set region
+                    AWS.config.update({
+                      accessKeyId: AWS_KEY,
+                      secretAccessKey: AWS_SECRET,
+                      region: SNS_REGION
+                    });
+                    
+                    //Create a payload here 
+                    var payload = {
+                        default: 'Hello World',
+                        APNS: {
+                            aps: {
+                                alert: 'Hello World',
+                                sound: 'default',
+                                badge: 1
+                            }
+                        }
+                    };
+
+                    // first have to stringify the inner APNS object...
+                    payload.APNS = JSON.stringify(payload.APNS);
+                    // then have to stringify the entire message payload
+                    payload = JSON.stringify(payload);
+
+                    sns.createPlatformEndpoint({
+                        PlatformApplicationArn: APPLICATION_ARN,
+                        Token: DEVICE_TOKEN
+                    }, function(err, data) {
+                        if (err) {
+                            console.log(err.stack);
+                            return;
+                        }
+                        var endpointArn = data.EndpointArn;
+                        sns.publish({
+                            Message: payload,      // Required
+                            MessageStructure: 'json',
+                            TargetArn: endpointArn, // can add topic ARN or target ARN here
+                        }, function(err, data) {
+                            if (err) {
+                                console.log(err);
+                                return;
+                            }
+                            console.log('push sent');
+                            console.log(data);
+                        });
+                    });
+                }
+            }
+        );
+    }
+
 }
 
 module.exports = SnsSampleSubscribers;
+
